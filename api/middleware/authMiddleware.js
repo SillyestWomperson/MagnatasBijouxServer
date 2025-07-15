@@ -28,17 +28,17 @@ const authenticateToken = (req, res, next) => {
 	const token = authHeader && authHeader.startsWith("Bearer ") && authHeader.split(" ")[1];
 
 	if (!token) {
-		return res.json({ ok: false, message: "Token não fornecido." });
+		return res.status(401).json({ message: "Token de autenticação não fornecido." });
 	}
 
 	jwt.verify(token, JWT_SECRET, (err, decodedPayload) => {
 		if (err) {
 			if (err.name === "TokenExpiredError") {
 				console.warn("JWT Verification Warning: Token expired for a request.");
-				return res.json({ ok: false, message: "Sua token expirou." });
+				return res.status(401).json({ message: "Sua token expirou. Faça login novamente." });
 			}
 			console.error("JWT Verification Error: Invalid token provided. Details:", err.message);
-			return res.json({ ok: false, message: "Sua token é inválida." });
+			return res.status(403).json({ message: "Sua token é inválida. Acesso negado." });
 		}
 		req.auth = decodedPayload;
 		next();
