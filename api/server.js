@@ -10,7 +10,11 @@ const productRoutes = require("./routes/products");
 
 const app = express();
 
-const allowedOrigins = ["http://localhost:3000", "https://magnatas-bijoux-server.vercel.app/"];
+const allowedOrigins = [
+	"http://localhost:3000",
+	"https://magnatas-bijoux-server.vercel.app/",
+	"https://magnatas-bijoux.netlify.app/",
+];
 
 app.use(
 	cors({
