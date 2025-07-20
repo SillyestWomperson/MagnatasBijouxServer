@@ -104,4 +104,47 @@ router.delete("/delete", authenticateToken, attachDB, async (req, res, next) => 
 	}
 });
 
+// PATCH /api/auth/change-password
+router.patch("/change-password", authenticateToken, attachDB, async (req, res) => {
+	try {
+		const userEmail = req.auth.email;
+		const { currentPassword, newPassword } = req.body;
+
+		if (!userEmail || !currentPassword || !newPassword) {
+			return res.status(400).json({ message: "Todos os campos são obrigatórios." });
+		}
+
+		const usersCollection = req.db.collection("users");
+		const userDoc = await usersCollection.findOne({ email: userEmail });
+
+		if (!userDoc) {
+			return res.status(404).json({ message: "Usuário não encontrado." });
+		}
+
+		const isMatch = await comparePassword(currentPassword, userDoc.password);
+		if (!isMatch) {
+			return res.status(401).json({ message: "Senha atual incorreta." });
+		}
+
+		if (newPassword.length < 6) {
+			return res.status(400).json({ message: "A nova senha deve ter no mínimo 6 caracteres." });
+		}
+
+		const hashedNewPassword = await hashPassword(newPassword);
+
+		const result = await usersCollection.updateOne({ email: userEmail }, { $set: { password: hashedNewPassword } });
+
+		if (result.modifiedCount === 0) {
+			return res.status(500).json({ message: "Não foi possível atualizar a senha. Tente novamente." });
+		}
+
+		res.status(200).json({ message: "Senha alterada com sucesso." });
+	} catch (error) {
+		console.error("Erro ao mudar a senha:", error);
+		return res
+			.status(500)
+			.json({ message: "Ocorreu um erro interno ao mudar a senha. Tente novamente mais tarde." });
+	}
+});
+
 module.exports = router;

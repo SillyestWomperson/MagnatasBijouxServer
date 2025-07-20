@@ -1,41 +1,39 @@
 const { MongoClient } = require("mongodb");
-require("dotenv").config({ silent: true });
+require("dotenv").config({ quiet: true });
 
 const MONGO_URI = process.env.MONGO_URI;
-
-let client;
-let dbInstance;
+let dbInstance = null;
 
 const connectDB = async () => {
-	if (dbInstance && client && client.topology.isConnected()) {
-		return dbInstance;
-	}
+	if (dbInstance) return dbInstance;
 
 	if (!MONGO_URI) {
+		console.error("MONGO_URI missing in .env");
 		process.exit(1);
 	}
 
 	try {
-		client = new MongoClient(MONGO_URI);
+		const client = new MongoClient(MONGO_URI);
 		await client.connect();
+		console.log("MongoDB Connected");
+		dbInstance = client.db("MagnatasDB");
 		return dbInstance;
 	} catch (error) {
-		console.error(`MongoDB Connection Error: ${error.message}`);
-		return res.status(500).json({ message: "Ocorreu um erro interno ao conectar ao banco de dados." });
+		console.error("Connection failed:", error.message);
+		throw error;
 	}
 };
 
-const attachDB = async (req, res, next) => {
-	try {
-		if (!dbInstance) {
-			await connectDB();
-		}
-		req.db = dbInstance;
-		next();
-	} catch (error) {
-		console.error("Error attaching DB to request:", error);
-		return res.status(500).json({ message: "Ocorreu um erro interno ao conectar ao banco de dados." });
-	}
+const attachDB = (req, res, next) => {
+	connectDB()
+		.then((db) => {
+			req.db = db;
+			next();
+		})
+		.catch((err) => {
+			console.error("DB attach error:", err);
+			res.status(500).json({ message: "Database connection failed" });
+		});
 };
 
-module.exports = { connectDB, attachDB, getDbInstance: () => dbInstance };
+module.exports = { connectDB, attachDB };

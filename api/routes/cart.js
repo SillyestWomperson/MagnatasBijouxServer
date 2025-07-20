@@ -2,10 +2,10 @@ const express = require("express");
 const { authenticateToken } = require("../middleware/authMiddleware");
 const { attachDB } = require("../config/db");
 
-const roteador = express.Router();
+const router = express.Router();
 
 // GET /api/cart
-roteador.get("/", authenticateToken, attachDB, async (req, res) => {
+router.get("/", authenticateToken, attachDB, async (req, res) => {
 	try {
 		const emailUser = req.auth.email;
 		if (!emailUser) {
@@ -20,73 +20,18 @@ roteador.get("/", authenticateToken, attachDB, async (req, res) => {
 		if (!documentoUsuario) {
 			return res.status(404).json({ message: "Usuário não encontrado." });
 		}
+
 		const itensCarrinho = documentoUsuario.cart || [];
-		if (!itensCarrinho) {
-			return res.status(200).json({ message: "Nenhum item no carrinho." });
-		}
+
 		res.status(200).json({ message: "Itens do carrinho encontrados com sucesso.", cart: itensCarrinho });
 	} catch (error) {
+		console.error("Erro ao recuperar carrinho:", error);
 		return res.status(500).json({ message: "Ocorreu um erro interno. Tente novamente mais tarde." });
 	}
 });
 
 // DELETE /api/cart
-roteador.delete("/", authenticateToken, attachDB, async (req, res) => {
-	try {
-		const emailUser = req.auth.email;
-		if (!emailUser) {
-			return res.status(400).json({ message: "Não foi possível identificar o usuário." });
-		}
-		const colecaoUsuarios = req.db.collection("users");
-		const resultado = await colecaoUsuarios.updateOne({ email: emailUser }, { $set: { cart: [] } });
-		if (resultado.matchedCount === 0) {
-			return res.status(404).json({ message: "Usuário não encontrado." });
-		}
-		if (resultado.modifiedCount === 0) {
-			return res.status(200).json({ message: "Carrinho já está vazio." });
-		}
-		res.status(200).json({ message: "Carrinho foi limpado com sucesso.", cart: [] });
-	} catch (error) {
-		return res.status(500).json({ message: "Ocorreu um erro interno. Tente novamente mais tarde." });
-	}
-});
-
-
-const express = require("express");
-const { authenticateToken } = require("../middleware/authMiddleware");
-const { attachDB } = require("../config/db");
-const { ObjectId } = require("mongodb"); // É uma boa prática usar ObjectId se os Ids forem do tipo ObjectId do Mongo
-
-const roteador = express.Router();
-
-// GET /api/cart
-roteador.get("/", authenticateToken, attachDB, async (req, res) => {
-	try {
-		const emailUser = req.auth.email;
-		if (!emailUser) {
-			return res.status(400).json({ message: "Não foi possível identificar o usuário." });
-		}
-		const colecaoUsuarios = req.db.collection("users");
-		const documentoUsuario = await colecaoUsuarios.findOne(
-			{ email: emailUser },
-			{ projection: { password: 0, _id: 0 } }
-		);
-
-		if (!documentoUsuario) {
-			return res.status(404).json({ message: "Usuário não encontrado." });
-		}
-		const itensCarrinho = documentoUsuario.cart || [];
-		if (!itensCarrinho) {
-			return res.status(200).json({ message: "Nenhum item no carrinho." });
-		}
-		res.status(200).json({ message: "Itens do carrinho encontrados com sucesso.", cart: itensCarrinho });
-	} catch (error) {
-		return res.status(500).json({ message: "Ocorreu um erro interno. Tente novamente mais tarde." });
-	}
-});
-
-// DELETE /api/cart
-roteador.delete("/", authenticateToken, attachDB, async (req, res) => {
+router.delete("/", authenticateToken, attachDB, async (req, res) => {
 	try {
 		const emailUser = req.auth.email;
 		if (!emailUser) {
@@ -112,7 +57,7 @@ roteador.delete("/", authenticateToken, attachDB, async (req, res) => {
 
 // POST /api/cart - Rota para adicionar um item no carrinho
 // Se o item já existir no carrinho, incrementa a quantidade. Caso contrário, adiciona o novo item.
-roteador.post("/", authenticateToken, attachDB, async (req, res) => {
+router.post("/", authenticateToken, attachDB, async (req, res) => {
 	try {
 		const emailUser = req.auth.email;
 		const { productId, size, bathedType } = req.body;
@@ -122,7 +67,6 @@ roteador.post("/", authenticateToken, attachDB, async (req, res) => {
 		}
 
 		const colecaoUsuarios = req.db.collection("users");
-
 
 		const usuario = await colecaoUsuarios.findOne({ email: emailUser });
 		if (!usuario) {
@@ -134,7 +78,6 @@ roteador.post("/", authenticateToken, attachDB, async (req, res) => {
 		);
 
 		if (itemExistente) {
-	
 			const resultado = await colecaoUsuarios.updateOne(
 				{ email: emailUser, "cart.productId": productId },
 				{ $inc: { "cart.$.amount": 1 } }
@@ -145,7 +88,6 @@ roteador.post("/", authenticateToken, attachDB, async (req, res) => {
 			}
 			res.status(200).json({ message: "Quantidade do item atualizada com sucesso." });
 		} else {
-	
 			const novoItem = {
 				productId,
 				amount: 1,
@@ -166,7 +108,7 @@ roteador.post("/", authenticateToken, attachDB, async (req, res) => {
 });
 
 // DELETE /api/cart/:productId - Rota para remover um item específico do carrinho
-roteador.delete("/:productId", authenticateToken, attachDB, async (req, res) => {
+router.delete("/:productId", authenticateToken, attachDB, async (req, res) => {
 	try {
 		const emailUser = req.auth.email;
 		const { productId } = req.params;
@@ -194,7 +136,7 @@ roteador.delete("/:productId", authenticateToken, attachDB, async (req, res) => 
 });
 
 // PATCH /api/cart - Rota para mudar valores de um produto no carrinho
-roteador.patch("/", authenticateToken, attachDB, async (req, res) => {
+router.patch("/", authenticateToken, attachDB, async (req, res) => {
 	try {
 		const emailUser = req.auth.email;
 		const { productId, amount, size, bathedType } = req.body;
@@ -212,7 +154,7 @@ roteador.patch("/", authenticateToken, attachDB, async (req, res) => {
 		if (amount !== undefined) camposParaAtualizar["cart.$[item].amount"] = amount;
 		if (size !== undefined) camposParaAtualizar["cart.$[item].size"] = size;
 		if (bathedType !== undefined) camposParaAtualizar["cart.$[item].bathedType"] = bathedType;
-		
+
 		if (Object.keys(camposParaAtualizar).length === 0) {
 			return res.status(400).json({ message: "Nenhum campo para atualizar foi fornecido." });
 		}
@@ -235,5 +177,4 @@ roteador.patch("/", authenticateToken, attachDB, async (req, res) => {
 	}
 });
 
-module.exports = roteador;
-
+module.exports = router;

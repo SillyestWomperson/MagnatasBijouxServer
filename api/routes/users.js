@@ -38,9 +38,9 @@ router.put("/update", authenticateToken, attachDB, async (req, res, next) => {
 		}
 
 		const updateFields = {};
-		if (name) updateFields.name = name;
-		if (surname) updateFields.surname = surname;
-		if (profilePicURL) updateFields.profilePicURL = profilePicURL;
+		if (name !== undefined) updateFields.name = name;
+		if (surname !== undefined) updateFields.surname = surname;
+		if (profilePicURL !== undefined) updateFields.profilePicURL = profilePicURL;
 
 		if (Object.keys(updateFields).length === 0) {
 			return res.status(400).json({ message: "Nenhum campo fornecido para atualização." });
@@ -48,17 +48,22 @@ router.put("/update", authenticateToken, attachDB, async (req, res, next) => {
 
 		const usersCollection = req.db.collection("users");
 
-		const result = await usersCollection.findOneAndUpdate(
-			{ email: userEmail },
-			{ $set: updateFields },
-			{ returnDocument: "after", projection: { password: 0, _id: 0 } }
-		);
+		const updateResult = await usersCollection.updateOne({ email: userEmail }, { $set: updateFields });
 
-		if (!result.value) {
+		if (updateResult.matchedCount === 0) {
 			return res.status(404).json({ message: "Usuário não encontrado para atualização." });
 		}
 
-		res.status(200).json({ message: "Dados do usuário atualizados com sucesso.", user: result.value });
+		const updatedUserDoc = await usersCollection.findOne(
+			{ email: userEmail },
+			{ projection: { password: 0, _id: 0 } }
+		);
+
+		if (!updatedUserDoc) {
+			return res.status(404).json({ message: "Usuário atualizado, mas não encontrado para retorno." });
+		}
+
+		res.status(200).json({ message: "Dados do usuário atualizados com sucesso.", user: updatedUserDoc });
 	} catch (error) {
 		console.error("Erro ao atualizar dados do usuário:", error);
 		return res
@@ -66,3 +71,5 @@ router.put("/update", authenticateToken, attachDB, async (req, res, next) => {
 			.json({ message: "Ocorreu um erro interno ao tentar atualizar o usuário. Tente novamente mais tarde." });
 	}
 });
+
+module.exports = router;
