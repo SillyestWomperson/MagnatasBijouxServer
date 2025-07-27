@@ -2,7 +2,7 @@
 
 ## Contribuições por Rota
 
-Este projeto foi desenvolvido por **Tanese**, **Gabriel** e **Miguel** nas rotas de carrinho.
+Este projeto foi desenvolvido por **Tanese**, **Gabriel** e **Miguel** nas rotas.
 
 Abaixo, um detalhamento das responsabilidades:
 
