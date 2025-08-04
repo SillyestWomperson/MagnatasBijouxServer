@@ -8,7 +8,7 @@ const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
 
 if (!JWT_SECRET) {
 	console.error("FATAL ERROR: JWT_SECRET is not defined.");
-	process.exit(1);
+	//process.exit(1);
 }
 
 const generateToken = (userPayload) => {
@@ -51,3 +51,4 @@ module.exports = {
 	comparePassword,
 	authenticateToken,
 };
+
