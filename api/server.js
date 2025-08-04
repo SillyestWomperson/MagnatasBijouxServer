@@ -39,8 +39,13 @@ app.get("/api", (req, res) => {
 	res.json({ ok: true });
 });
 
+app.get("/", (req, res) => {
+	res.send("teste?????");
+});
+
 /* app.listen(3001, () => {
 	console.log("Servidor rodando localmente em: http://localhost:3001");
 }); */
 
 module.exports = app;
+
