@@ -9,7 +9,7 @@ const connectDB = async () => {
 
 	if (!MONGO_URI) {
 		console.error("MONGO_URI missing in .env");
-		process.exit(1);
+		//process.exit(1);
 	}
 
 	try {
@@ -37,3 +37,4 @@ const attachDB = (req, res, next) => {
 };
 
 module.exports = { connectDB, attachDB };
+
