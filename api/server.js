@@ -18,7 +18,7 @@ const allowedOrigins = [
 
 app.use(
 	cors({
-		origin: allowedOrigins,
+		origin: "*",
 		methods: ["GET", "POST", "DELETE", "PATCH", "PUT", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
 	})
@@ -48,4 +48,5 @@ app.get("/", (req, res) => {
 }); */
 
 module.exports = app;
+
 
